@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌿 Smart Agriculture</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🌱 Smart Agriculture Monitoring</h1>
+
+  <h2>📈 Temperature & Humidity Chart</h2>
+  <canvas id="sensorChart"></canvas>
+
+  <h2>🎛️ Device Control</h2>
+  <button onclick="toggleDevice('pump')">Toggle Pump</button>
+  <button onclick="toggleDevice('light')">Toggle Light</button>
+
+  <h3>Status:</h3>
+  <p>💧 Pump: <span id="pumpState">...</span></p>
+  <p>💡 Light: <span id="lightState">...</span></p>
+
+  <h2>📋 Latest Sensor Readings</h2>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Temp</th><th>Humidity</th><th>Soil</th><th>Water</th><th>Light</th><th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="dataBody"></tbody>
+  </table>
+
+  <script>
+    const ctx = document.getElementById("sensorChart").getContext("2d");
+    const tableBody = document.getElementById("dataBody");
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Temperature",
+            data: [],
+            borderColor: 'red',
+            fill: false
+          },
+          {
+            label: "Humidity",
+            data: [],
+            borderColor: 'blue',
+            fill: false
+          }
+        ]
+      }
+    });
+
+    function fetchSensorData() {
+      fetch("http://localhost:5000/api/data")
+        .then(res => res.json())
+        .then(data => {
+          chart.data.labels = data.map(d => new Date(d.timestamp).toLocaleTimeString());
+          chart.data.datasets[0].data = data.map(d => d.temperature);
+          chart.data.datasets[1].data = data.map(d => d.humidity);
+          chart.update();
+
+          tableBody.innerHTML = data.map(d => `
+            <tr>
+              <td>${d.temperature}</td>
+              <td>${d.humidity}</td>
+              <td>${d.soil}</td>
+              <td>${d.water}</td>
+              <td>${d.light}</td>
+              <td>${new Date(d.timestamp).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        });
+    }
+
+    function toggleDevice(device) {
+      fetch(`http://localhost:5000/api/control/${device}`, { method: "POST" })
+        .then(res => res.json())
+        .then(state => {
+          document.getElementById(`${device}State`).textContent = state.status ? "ON" : "OFF";
+        });
+    }
+
+    function updateStates() {
+      fetch("http://localhost:5000/api/control")
+        .then(res => res.json())
+        .then(states => {
+          document.getElementById("pumpState").textContent = states.pump ? "ON" : "OFF";
+          document.getElementById("lightState").textContent = states.light ? "ON" : "OFF";
+        });
+    }
+
+    setInterval(fetchSensorData, 5000);
+    setInterval(updateStates, 3000);
+    fetchSensorData();
+    updateStates();
+  </script>
+</body>
+</html>
