@@ -56,7 +56,7 @@
     });
 
     function fetchSensorData() {
-      fetch("http://localhost:5000/api/data")
+      fetch("https://project123-lzsq.onrender.com/api/data")
         .then(res => res.json())
         .then(data => {
           chart.data.labels = data.map(d => new Date(d.timestamp).toLocaleTimeString());
@@ -78,7 +78,7 @@
     }
 
     function toggleDevice(device) {
-      fetch(`http://localhost:5000/api/control/${device}`, { method: "POST" })
+      fetch(`https://project123-lzsq.onrender.com/api/control/${device}`, { method: "POST" })
         .then(res => res.json())
         .then(state => {
           document.getElementById(`${device}State`).textContent = state.status ? "ON" : "OFF";
@@ -86,7 +86,7 @@
     }
 
     function updateStates() {
-      fetch("http://localhost:5000/api/control")
+      fetch("https://project123-lzsq.onrender.com/api/control")
         .then(res => res.json())
         .then(states => {
           document.getElementById("pumpState").textContent = states.pump ? "ON" : "OFF";
